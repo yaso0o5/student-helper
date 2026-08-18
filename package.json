@@ -1,1 +1,8 @@
-{"name":"student-helper","version":"1.0.0","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"@prisma/client":"latest","bcryptjs":"latest","next":"latest","react":"latest","react-dom":"latest","zod":"latest"},"devDependencies":{"@types/node":"latest","@types/react":"latest","@types/react-dom":"latest","prisma":"latest","typescript":"latest","tailwindcss":"latest","@tailwindcss/postcss":"latest","postcss":"latest"}}
+{
+  "name":"student-helper",
+  "version":"1.0.0",
+  "private":true,
+  "scripts":{"dev":"next dev","build":"prisma generate && next build","start":"next start","lint":"next lint","db:push":"prisma db push","db:generate":"prisma generate"},
+  "dependencies":{"@prisma/client":"latest","bcryptjs":"latest","next":"latest","react":"latest","react-dom":"latest","zod":"latest"},
+  "devDependencies":{"@types/node":"latest","@types/react":"latest","@types/react-dom":"latest","prisma":"latest","typescript":"latest","tailwindcss":"latest","@tailwindcss/postcss":"latest","postcss":"latest"}
+}
