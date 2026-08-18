@@ -1,0 +1,6 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { db } from '@/lib/db'; import { getCurrentUser } from '@/lib/auth';
+const schema=z.object({subject:z.string().trim().min(1).max(80),topic:z.string().trim().min(1).max(160),difficulty:z.enum(['Easy','Medium','Hard']),duration:z.number().int().min(5).max(240),notes:z.string().max(2000).optional()});
+export async function POST(req:Request){const user=await getCurrentUser();if(!user)return NextResponse.json({error:'Unauthorized'},{status:401});try{const p=schema.safeParse(await req.json());if(!p.success)return NextResponse.json({error:'Invalid session details.'},{status:400});const s=await db.studySession.create({data:{...p.data,userId:user.id}});return NextResponse.json({sessionId:s.id},{status:201})}catch{return NextResponse.json({error:'Could not create session.'},{status:500})}}
+export async function GET(){const user=await getCurrentUser();if(!user)return NextResponse.json({error:'Unauthorized'},{status:401});const sessions=await db.studySession.findMany({where:{userId:user.id},orderBy:{createdAt:'desc'},take:50,select:{id:true,subject:true,topic:true,difficulty:true,duration:true,createdAt:true}});return NextResponse.json({sessions})}
