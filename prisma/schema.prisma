@@ -1,64 +1,71 @@
-generator client { provider = "prisma-client-js" }
+generator client {
+  provider = "prisma-client-js"
+}
 
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+datasource db {
+  provider = "postgresql"
+}
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
+  id           String          @id @default(cuid())
+  name         String
+  email        String          @unique
   passwordHash String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  sessions  StudySession[]
-  progress  StudyProgress[]
-  attempts  QuizAttempt[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  sessions     StudySession[]
+  progress     StudyProgress[]
+  attempts     QuizAttempt[]
 }
 
 model StudySession {
-  id        String   @id @default(cuid())
-  userId    String
-  subject   String
-  topic     String
+  id         String   @id @default(cuid())
+  userId     String
+  subject    String
+  topic      String
   difficulty String
-  duration  Int
-  notes     String?
-  summary   String?
-  material  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quiz      Quiz?
+  duration   Int
+  notes      String?
+  summary    String?
+  material   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz       Quiz?
+
   @@index([userId, createdAt])
 }
 
 model Quiz {
-  id             String @id @default(cuid())
-  studySessionId String @unique
+  id             String        @id @default(cuid())
+  studySessionId String        @unique
   questions      Json
-  createdAt      DateTime @default(now())
-  session        StudySession @relation(fields: [studySessionId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  session        StudySession  @relation(fields: [studySessionId], references: [id], onDelete: Cascade)
   attempts       QuizAttempt[]
 }
 
 model QuizAttempt {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   quizId    String
   userId    String
   score     Int
   answers   Json
   createdAt DateTime @default(now())
-  quiz      Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
 }
 
 model StudyProgress {
-  id               String   @id @default(cuid())
-  userId           String
-  subject          String
+  id                String   @id @default(cuid())
+  userId            String
+  subject           String
   completedSessions Int      @default(0)
-  averageScore     Float    @default(0)
-  lastStudiedAt    DateTime @default(now())
-  user             User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  averageScore      Float    @default(0)
+  lastStudiedAt     DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, subject])
 }
