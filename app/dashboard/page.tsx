@@ -10,14 +10,7 @@ export default async function Dashboard() {
     where: { userId: user.id },
     orderBy: { createdAt: 'desc' },
     take: 10,
-    select: {
-      id: true,
-      subject: true,
-      topic: true,
-      difficulty: true,
-      duration: true,
-      createdAt: true,
-    },
+    select: { id: true, subject: true, topic: true, difficulty: true, duration: true, createdAt: true },
   });
 
   return (
@@ -34,53 +27,31 @@ export default async function Dashboard() {
         </header>
 
         <section className="mt-10 grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
-            <p className="text-sm text-zinc-500">Study sessions</p>
-            <p className="mt-3 text-3xl font-semibold">{sessions.length}</p>
-          </div>
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
-            <p className="text-sm text-zinc-500">Quiz average</p>
-            <p className="mt-3 text-3xl font-semibold">—</p>
-          </div>
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
-            <p className="text-sm text-zinc-500">Current streak</p>
-            <p className="mt-3 text-3xl font-semibold">0 days</p>
-          </div>
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6"><p className="text-sm text-zinc-500">Study sessions</p><p className="mt-3 text-3xl font-semibold">{sessions.length}</p></div>
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6"><p className="text-sm text-zinc-500">Quiz average</p><p className="mt-3 text-3xl font-semibold">—</p></div>
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6"><p className="text-sm text-zinc-500">Current streak</p><p className="mt-3 text-3xl font-semibold">0 days</p></div>
+        </section>
+
+        <section className="mt-8 grid gap-4 md:grid-cols-2">
+          <a href="/dashboard/chat" className="group rounded-3xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-zinc-950 to-zinc-950 p-7 transition hover:border-cyan-300/60 hover:-translate-y-0.5">
+            <div className="flex items-start justify-between"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-300 text-2xl">🤖</div><span className="text-sm text-cyan-300">Open chat →</span></div>
+            <h2 className="mt-6 text-2xl font-semibold">Chat with Yasso AI</h2>
+            <p className="mt-2 max-w-lg text-sm leading-6 text-zinc-400">Ask Yasso AI to explain lessons, help you revise, generate practice questions, or clear up anything you don't understand.</p>
+          </a>
+
+          <a href="/dashboard/new" className="group rounded-3xl border border-zinc-800 bg-zinc-950 p-7 transition hover:border-zinc-600 hover:-translate-y-0.5">
+            <div className="flex items-start justify-between"><div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-800 text-2xl">📚</div><span className="text-sm text-zinc-400">Start →</span></div>
+            <h2 className="mt-6 text-2xl font-semibold">Create AI Study Session</h2>
+            <p className="mt-2 max-w-lg text-sm leading-6 text-zinc-400">Generate notes, key concepts, examples, a study plan, and a five-question quiz with Gemini.</p>
+          </a>
         </section>
 
         <section className="mt-8 rounded-3xl border border-zinc-800 bg-zinc-950 p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-widest text-cyan-300">Your sessions</p>
-              <h2 className="mt-2 text-2xl font-semibold">Recent study sessions</h2>
-            </div>
+            <div><p className="text-sm uppercase tracking-widest text-cyan-300">Your sessions</p><h2 className="mt-2 text-2xl font-semibold">Recent study sessions</h2></div>
             <a href="/dashboard/new" className="inline-block rounded-xl bg-cyan-300 px-5 py-3 text-center font-semibold text-black">New study session</a>
           </div>
-
-          {sessions.length === 0 ? (
-            <div className="mt-8 rounded-2xl border border-dashed border-zinc-800 p-8 text-center">
-              <p className="text-lg font-medium">No study sessions yet.</p>
-              <p className="mt-2 text-sm text-zinc-500">Create your first session to start learning.</p>
-            </div>
-          ) : (
-            <div className="mt-8 space-y-3">
-              {sessions.map((session) => (
-                <div key={session.id} className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-semibold">{session.subject}</p>
-                    <p className="mt-1 text-sm text-zinc-400">{session.topic}</p>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-zinc-500">
-                    <span>{session.difficulty}</span>
-                    <span>•</span>
-                    <span>{session.duration} min</span>
-                    <span>•</span>
-                    <span>{session.createdAt.toLocaleDateString()}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {sessions.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-zinc-800 p-8 text-center"><p className="text-lg font-medium">No study sessions yet.</p><p className="mt-2 text-sm text-zinc-500">Create your first session to start learning.</p></div> : <div className="mt-8 space-y-3">{sessions.map((session) => <a href={`/dashboard/session/${session.id}`} key={session.id} className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 transition hover:border-zinc-600 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">{session.subject}</p><p className="mt-1 text-sm text-zinc-400">{session.topic}</p></div><div className="flex items-center gap-3 text-xs text-zinc-500"><span>{session.difficulty}</span><span>•</span><span>{session.duration} min</span><span>•</span><span>{session.createdAt.toLocaleDateString()}</span></div></a>)}</div>}
         </section>
       </div>
     </main>
