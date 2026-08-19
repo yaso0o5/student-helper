@@ -27,7 +27,7 @@ const aiSchema = z.object({
 
 async function generateMaterial(subject: string, topic: string, difficulty: string, notes?: string) {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('AI is not configured yet.');
+  if (!apiKey) throw new Error('AI is not configured yet. Add GEMINI_API_KEY in Vercel.');
 
   const prompt = `You are an expert study tutor. Create accurate, age-appropriate study material.
 Subject: ${subject}
@@ -47,28 +47,51 @@ Return ONLY valid JSON with exactly this shape:
 
 Create exactly 5 multiple-choice questions. Each question must have exactly 4 distinct options and exactly one correct answer. The answer field is the zero-based index of the correct option. Make the questions directly about the requested topic. Do not invent facts. Keep the explanations concise.`;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.3 },
-      }),
-      cache: 'no-store',
-    },
-  );
+  const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  let lastError = 'AI provider request failed.';
 
-  if (!response.ok) throw new Error('AI provider request failed.');
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (typeof text !== 'string') throw new Error('AI returned an invalid response.');
+  for (const model of models) {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.3 },
+        }),
+        cache: 'no-store',
+      },
+    );
 
-  const parsed = JSON.parse(text);
-  const result = aiSchema.safeParse(parsed);
-  if (!result.success) throw new Error('AI returned an unexpected response.');
-  return result.data;
+    if (!response.ok) {
+      let providerMessage = '';
+      try {
+        const body = await response.json();
+        providerMessage = typeof body?.error?.message === 'string' ? body.error.message : '';
+      } catch {}
+      lastError = `Gemini ${model} failed (${response.status}).${providerMessage ? ` ${providerMessage}` : ''}`;
+      continue;
+    }
+
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (typeof text !== 'string') {
+      lastError = `Gemini ${model} returned no text.`;
+      continue;
+    }
+
+    try {
+      const parsed = JSON.parse(text);
+      const result = aiSchema.safeParse(parsed);
+      if (result.success) return result.data;
+      lastError = `Gemini ${model} returned data in an unexpected format.`;
+    } catch {
+      lastError = `Gemini ${model} returned invalid JSON.`;
+    }
+  }
+
+  throw new Error(lastError);
 }
 
 export async function POST(req: Request) {
@@ -92,11 +115,7 @@ export async function POST(req: Request) {
         summary: material.summary,
         material,
         userId: user.id,
-        quiz: {
-          create: {
-            questions: material.quiz,
-          },
-        },
+        quiz: { create: { questions: material.quiz } },
       },
       select: { id: true },
     });
@@ -104,7 +123,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ sessionId: session.id }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Could not create session.';
-    const status = message.startsWith('AI') ? 502 : 500;
+    const status = message.startsWith('Gemini') || message.startsWith('AI') ? 502 : 500;
     return NextResponse.json({ error: message }, { status });
   }
 }
