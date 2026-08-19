@@ -11,7 +11,8 @@ export default function QuizClient({ questions, quizId }: { questions: Question[
 
   if (!questions.length) return <p className="text-zinc-500">No quiz was generated for this session.</p>;
 
-  const score = questions.reduce((sum, q, i) => sum + (selected[i] === q.answer ? 1 : 0), 0);
+  const correctCount = questions.reduce((sum, q, i) => sum + (selected[i] === q.answer ? 1 : 0), 0);
+  const scorePercent = Math.round((correctCount / questions.length) * 100);
 
   async function submit() {
     if (Object.keys(selected).length !== questions.length) return;
@@ -20,7 +21,7 @@ export default function QuizClient({ questions, quizId }: { questions: Question[
     try {
       const response = await fetch('/api/quiz/attempts', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quizId, score, answers: selected }),
+        body: JSON.stringify({ quizId, score: scorePercent, answers: selected }),
       });
       if (response.ok) setSaved(true);
     } finally { setSaving(false); }
@@ -46,7 +47,7 @@ export default function QuizClient({ questions, quizId }: { questions: Question[
       {!submitted ? (
         <button disabled={Object.keys(selected).length !== questions.length || saving} onClick={submit} className="w-full rounded-xl bg-cyan-300 py-3 font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Submit quiz</button>
       ) : (
-        <div className="rounded-2xl border border-cyan-900 bg-cyan-950/20 p-6 text-center"><p className="text-sm text-cyan-300">Your score</p><p className="mt-2 text-4xl font-semibold">{score}/{questions.length}</p><p className="mt-2 text-sm text-zinc-400">{saved ? 'Saved to your progress.' : saving ? 'Saving your result…' : 'Result calculated.'}</p></div>
+        <div className="rounded-2xl border border-cyan-900 bg-cyan-950/20 p-6 text-center"><p className="text-sm text-cyan-300">Your score</p><p className="mt-2 text-4xl font-semibold">{correctCount}/{questions.length} · {scorePercent}%</p><p className="mt-2 text-sm text-zinc-400">{saved ? 'Saved to your progress.' : saving ? 'Saving your result…' : 'Result calculated.'}</p></div>
       )}
     </div>
   );
