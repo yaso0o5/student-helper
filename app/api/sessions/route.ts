@@ -47,7 +47,8 @@ Return ONLY valid JSON with exactly this shape:
 
 Create exactly 5 multiple-choice questions. Each question must have exactly 4 distinct options and exactly one correct answer. The answer field is the zero-based index of the correct option. Make the questions directly about the requested topic. Do not invent facts. Keep the explanations concise.`;
 
-  const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  // Prefer the main Flash model. Use the currently recommended Lite model only as fallback.
+  const models = ['gemini-2.5-flash', 'gemini-3.5-flash-lite'];
   let lastError = 'AI provider request failed.';
 
   for (const model of models) {
