@@ -12,7 +12,13 @@ export async function POST(req: Request) {
     if (!parsed.success) return NextResponse.json({ error: 'Invalid email or password.' }, { status: 400 });
     const user = await db.user.findUnique({ where: { email: parsed.data.email } });
     if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
-    await createSession(user.id);
+
+    if (!user.emailVerifiedAt) {
+      const pending = await db.emailVerification.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (pending) return NextResponse.json({ error: 'Please verify your email first.', requiresVerification: true, email: user.email }, { status: 403 });
+    }
+
+    await createSession(user.id, req);
     return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email } });
   } catch { return NextResponse.json({ error: 'Login failed. Please try again.' }, { status: 500 }); }
 }
