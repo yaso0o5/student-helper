@@ -7,15 +7,42 @@ datasource db {
 }
 
 model User {
-  id           String          @id @default(cuid())
-  name         String
-  email        String          @unique
-  passwordHash String
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  sessions     StudySession[]
-  progress     StudyProgress[]
-  attempts     QuizAttempt[]
+  id                String          @id @default(cuid())
+  name              String
+  email             String          @unique
+  passwordHash      String
+  emailVerifiedAt   DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  sessions          StudySession[]
+  progress          StudyProgress[]
+  attempts          QuizAttempt[]
+  authSessions      AuthSession[]
+  emailVerification EmailVerification?
+}
+
+model AuthSession {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  deviceName String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+  expiresAt  DateTime
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  sentAt    DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model StudySession {
